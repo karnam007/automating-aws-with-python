@@ -1,0 +1,25 @@
+import boto3
+session = boto3.Session(profile_name='pythonAutomation')
+s3=session.resource('s3')
+
+new_bucket = s3.create_bucket(Bucket="adityatest44667", CreateBucketConfiguration={'LocationConstraint': session.region_name})
+
+
+new_bucket.upload_file('C:/Users/akarnam/Documents/AWS/Code/automating-aws-with-python/01-webotron/webotron/index.html', 'index.html', ExtraArgs={'ContentType':'t
+ ext/html'})
+ pol = new_bucket.Policy()
+ 
+ policy = policy.strip()
+  pol.put(Policy=policy)
+  
+
+ ws = new_bucket.Website()
+ ws.put(WebsiteConfiguration={ 'ErrorDocument': {
+            'Key': 'error.html'
+        },
+        'IndexDocument': {
+            'Suffix': 'index.html'
+        }})
+
+
+ 
