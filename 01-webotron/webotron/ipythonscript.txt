@@ -21,5 +21,27 @@ new_bucket.upload_file('C:/Users/akarnam/Documents/AWS/Code/automating-aws-with-
             'Suffix': 'index.html'
         }})
 
+		
+***
+Pathlib components to upload the dir to S3
+
+***
+from pathlib import Path 
+pathname = "kitten_web"
+path = Path(pathname)
+path.reslove()
+list(path.iterdir()) // to list all dir
+path.is_dir()
+path.is_file()
+
+def handle_dir(target):
+	for p in target.iterdir():
+		if p.is_dir(): handle_dir(p)
+		if p.is_file(): print(p.as_posix())
+
+		
+
+
+
 
  
