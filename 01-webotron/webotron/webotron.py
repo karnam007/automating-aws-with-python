@@ -11,17 +11,14 @@ Webotron script automates the process of deploying webiste to S3. It automates t
 '''
 
 
-from pathlib import Path
-import mimetypes
 import boto3
-from botocore.exceptions import ClientError
 import sys
 import click
-
+from bucket import BucketManager
 
 session = boto3.Session(profile_name='pythonAutomation')
-s3 = session.resource('s3')
-
+#s3 = session.resource('s3')
+bucket_manager = BucketManager(session)
 
 @click.group()
 def cli():
@@ -32,15 +29,14 @@ def cli():
 @cli.command('list-buckets')
 def list_buckets():
     '''List all s3 buckets'''
-    for b1 in s3.buckets.all():
+    for b1 in bucket_manager.all_bucket():
         print(b1)
-
 
 @cli.command('list-buckets-objects')
 @click.argument('bucket')
 def list_buckets_objects(bucket):
     '''List all of S3 objects'''
-    for obj in s3.Bucket(bucket).objects.all():
+    for obj in bucket_manager.all_object(bucket):
         print("obj")
 
 
@@ -48,49 +44,10 @@ def list_buckets_objects(bucket):
 @click.argument('bucket')
 def setup_bucket(bucket):
     '''Create and configure S3 buckets'''
-    s3_bucket = None
-    try:
-        s3_bucket = s3.create_bucket(Bucket=bucket, CreateBucketConfiguration={'LocationConstraint': session.region_name})
-    except ClientError as e:
-        if e.response['Error']['Code'] == 'BucketAlreadyOwnedByYou':
-            s3_bucket = s3.Bucket(bucket)
-        else:
-            raise e
-
-    policy = '''
-    {
-      "Version":"2012-10-17",
-      "Statement":[
-        {
-          "Sid":"AddPerm",
-          "Effect":"Allow",
-          "Principal": "*",
-          "Action":["s3:GetObject"],
-          "Resource":["arn:aws:s3:::%s/*"]
-        }
-      ]
-    }
-    ''' % s3_bucket.name
-    policy= policy.strip()
-    pol = s3_bucket.Policy()
-    pol.put(Policy=policy)
-    ws = s3_bucket.Website()
-    ws.put(WebsiteConfiguration={ 'ErrorDocument': {
-                    'Key': 'error.html'
-                },
-                'IndexDocument': {
-                    'Suffix': 'index.html'
-                }
-            })
+    s3_bucket = bucket_manager.init_bucket(bucket)
+    bucket_manager.set_policy(s3_bucket)
+    bucket_manager.configure_website(s3_bucket)
     return
-
-def upload_file(s3_bucket,path, key):
-    content_type = mimetypes.guess_type(key)[0] or 'text/plain'
-    s3_bucket.upload_file(
-        path,
-        key,
-        ExtraArgs = {"ContentType":"text/html"}
-    )
 
 @cli.command('sync')
 @click.argument('pathname', type = click.Path(exists=True))
@@ -98,15 +55,8 @@ def upload_file(s3_bucket,path, key):
 
 def sync(pathname,bucket):
     '''This is to upload the contents to AWS S3'''
-    pass
-    s3_bucket= s3.Bucket(bucket)
-    root = Path(pathname).expanduser().resolve()
-    def handle_dir(target):
-        for p in target.iterdir():
-            if p.is_dir(): handle_dir(p)
-            #if p.is_file(): print("Path:{} Key:{}".format(p, p.relative_to(root)))
-            if p.is_file(): upload_file(s3_bucket,str(p),str(p.relative_to(root)))
-    handle_dir(root)
+    bucket_manager.sync(pathname, bucket)
+
 
 if __name__ == '__main__':
     cli()
