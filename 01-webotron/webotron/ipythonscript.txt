@@ -40,6 +40,8 @@ def handle_dir(target):
 		if p.is_file(): print(p.as_posix())
 
 		
+nw_pathname = "~\Code\automating-aws-with-python\01-webotron\webotron\kitten_web"
+nw_pathname.expanduser()
 
 
 
