@@ -8,3 +8,4 @@ we have created a initial program to access the S3 and the objects in it
 -- List of objects in that bucket
 -- Create and setup bucket
 -- uploading files to S3 (directory sync)
+-- set AWS profile using --profile 
