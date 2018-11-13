@@ -2,6 +2,8 @@
 import mimetypes
 from pathlib import Path
 from botocore.exceptions import ClientError
+import util
+
 
 class BucketManager:
     def __init__(self,session):
@@ -11,6 +13,17 @@ class BucketManager:
     def all_bucket(self):
         '''retuen all the buckets from the AWS account'''
         return self.s3.buckets.all()
+
+    def get_region_name(self,bucket):
+        '''this will give the bucket region name'''
+        bucket_location = self.s3.meta.client.get_bucket_location(Bucket=bucket.name)
+        return bucket_location["LocationConstraint"] or 'us-east-1'
+
+
+    def get_bucket_url(self, bucket):
+        "get the bucket URL for the S3 which is generated thingy"
+        return "http://{}.{}".format(bucket.name,
+        util.get_endpoint(self.get_region_name(bucket)).host)
 
     def all_object(self,bucket_name):
         '''return all the objects from the S3 buckets'''
